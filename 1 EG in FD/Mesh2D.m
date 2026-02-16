@@ -1,31 +1,43 @@
-% This class implements a mesh for a squared-shaped reactor for order 2 FDM
+% This class implements a mesh for a squared-shaped reactor for FDM
+% The points in the mesh are centered inside of the cells
+% using a 5 points stencil
 
 classdef Mesh2D
     properties
-        L (1,1) double {mustBePositive} % Length of the side
-        M (1,1) integer {mustBeInteger} % Number of nodes on each side
-        cell_size (:,:) double % Matrix containing the length of the side of every square cell
+        L (1,1) double % Length of the side
+        nx (1,1) % Number of nodes on side x
+        ny (1,1) % Number of nodes on side y
+        hx (1,1) double % Mesh step size x
+        hy (1,1) double % Mesh step size y
+        nNodes (1,1) double
 
         X (:,:)
         Y (:,:)
     end
     
     methods
-        function m = Mesh2D(L, M, cell_size)
-            m.L = L;
-            m.M = M;
+        function obj = Mesh2D(L, nCellsX, nCellsY)
+            obj.L = L;
+            obj.nx = nCellsX;
+            obj.ny = nCellsY;
+            obj.hx = L/obj.nx;
+            obj.hy = L/obj.ny;
+            obj.nNodes = obj.nx * obj.ny;
             
-            if sum(cell_size,"all") ~= L^2 || all(size(cell_size)) ~= M
-                error("Invalid size: cell size vector must have length L = %d for each row/column and its elements must sum M = %d", L, M);
-            else
-                m.cell_size = cell_size;
-            end
-            
-            x_nodes = linspace(0, L, M+1);
-            y_nodes = linspace(0, L, M+1);
+            x_c = (obj.hx/2) : obj.hx : (L - obj.hx/2);
+            y_c = (obj.hy/2) : obj.hy : (L - obj.hy/2);
 
-            [m.X,m.Y] = meshgrid(x_nodes,y_nodes);
+            [obj.X, obj.Y] = meshgrid(x_c, y_c);
+        end
 
+        function k = getIndexInVector(obj, i, j)
+            % Get the lexicographical order of point (i,j)
+            k = i + (j-1)*obj.ny;
+        end
+
+        function [x,y] = getPlaneCoordinates(obj, i, j)
+            x = obj.X(i,j);
+            y = obj.Y(i,j);
         end
     end
 end
