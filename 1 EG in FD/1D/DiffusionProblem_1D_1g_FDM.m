@@ -35,8 +35,8 @@ classdef DiffusionProblem_1D_1g_FDM
             % 2. Calculate Coupling Coefficients (d)
             % d_i couples node i and i+1.
             % Formula: 2*D1*D2 / (dx2*D1 + dx1*D2)
-            D_curr = D_vec(1:end-1);
-            D_next = D_vec(2:end);
+            D_curr = D_vec(1:end-1); % D1
+            D_next = D_vec(2:end); % D2
             dx_curr = Delta_vec(1:end-1);
             dx_next = Delta_vec(2:end);
             
@@ -62,8 +62,8 @@ classdef DiffusionProblem_1D_1g_FDM
             lower_diag = [-d_vec; 0];
             
             % d_vec has length nNodes-1. We pad it to nNodes.
-            padded_d = [d_vec; 0]; 
-            padded_upper = [0; -d_vec]; % This works, but let's be explicit:
+            padded_d = [d_vec; 0];
+            padded_upper = [0; -d_vec];
             obj.A = spdiags([-padded_d, diag_A, padded_upper], -1:1, nNodes, nNodes);
 
             % 5. Build Matrix Q (Fission/Production)
