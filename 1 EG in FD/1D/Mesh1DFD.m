@@ -1,13 +1,15 @@
 % This class implements a mesh for a squared-shaped reactor for FDM
 classdef Mesh1DFD
     properties
-        Materials % Representation of the grid of materials
-        mesh_L (1,1) double % Length of the mesh
-        refinment (1,1) % Number of nodes in the smallest material region
+        % Input attributes
+        Materials Materials1gD1 % Representation of the grid of materials
+        refinment (1,1) double {mustBePositive, mustBeInteger} = 1% Number of nodes in the smallest material region
+
+        % Computed attributes
         nNodes (1,1) double % Number of nodes in the mesh
-        nodes_vec (:,1) % Cartesian coordinates of the nodes of the mesh
-        material_region_indices % Vector with the material region index of each node in the mesh
-        delta_region (:,1) % Vector with the step sizes for every region in the mesh
+        nodes_vec (:,1) double % Cartesian coordinates of the nodes of the mesh
+        material_region_indices (:,1) double % Vector with the material region index of each node in the mesh
+        delta_region (:,1) double % Vector with the step sizes for every region in the mesh
     end
     
     methods
@@ -57,7 +59,15 @@ classdef Mesh1DFD
                     ind = ind + 1;
                 end
             end
+        end
 
+        function displayMesh(obj)
+            fprintf('=================\n    MESH DATA    \n=================\n\n')
+            fprintf('Number of nodes: %d\n\n', obj.nNodes)
+            fprintf('Coordinates of the nodes:\n')
+            disp(obj.nodes_vec)
+            fprintf('Material region indices of the nodes:\n')
+            disp(obj.material_region_indices)
         end
     end
 end

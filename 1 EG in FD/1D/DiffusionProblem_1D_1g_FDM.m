@@ -3,12 +3,15 @@
 
 classdef DiffusionProblem_1D_1g_FDM    
     properties
-        mesh
-        materials
-        A
-        Q
-        phi
-        keff
+        % Input attributes
+        mesh Mesh1DFD
+        materials Materials1gD1
+
+        % Computed attributes
+        A (:,:) double
+        Q (:,:) double
+        phi (:,:) double
+        keff (:,1) double
     end
     
     methods
@@ -72,7 +75,7 @@ classdef DiffusionProblem_1D_1g_FDM
             obj.Q = spdiags(diag_Q, 0, nNodes, nNodes);
         end
 
-function obj = solveEigenvalues(obj, nm)
+        function obj = solveEigenvalues(obj, nm)
             % 1. Solve the generalized eigenvalue problem Q*phi = k*A*phi
             [V, D_eigen] = eigs(obj.Q, obj.A, nm, 'largestabs');
             
@@ -86,6 +89,18 @@ function obj = solveEigenvalues(obj, nm)
             
             % Divide each column by its own maximum
             obj.phi = V ./ max(V);
+        end
+
+        function displayProblem(obj)
+            fprintf('=================\n  PROBLEM DATA  \n=================\n\n');
+            fprintf('A matrix:\n');
+            disp(obj.A);
+            fprintf('Q matrix:\n');
+            disp(obj.Q);
+            fprintf('Phi:\n')
+            disp(obj.phi);
+            fprintf('Keff:\n')
+            disp(obj.keff);
         end
     end
 end
