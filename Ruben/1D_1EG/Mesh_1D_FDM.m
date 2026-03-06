@@ -1,80 +1,74 @@
 classdef Mesh_1D_FDM
+    %CLEAN_MESH Summary of this class goes here
+    %   Detailed explanation goes here
     properties
         % Input attributes
-        region_lengths (:,1) double     % Length of each region
-        region_materials (:,1) double   % Material ID assigned to each region
-        nodes_per_region (:,1) double   % Number of internal nodes in each region
+        region_lengths (:,1) double       % Length of each physical region
+        cells_per_region (:,1) double     % Number of discrete cells in each region
         
         % Computed attributes
-        nNodes (1,1) double             % Total number of nodes in the mesh
-        nodes_vec (:,1) double          % Cartesian coordinates of the nodes
-        node_region_idx (:,1) double    % The region index each node belongs to
-        node_material_idx (:,1) double  % The material ID each node contains
-        delta_region (:,1) double       % The step size (dx) for each region
-        region_boundaries (:,1) double  % Cartesian coordinates of the region interfaces
+        nCells (1,1) double               % Total number of cells in the slab
+        cell_centers (:,1) double         % Cartesian coordinates of the cell centers
+        cell_region_idx (:,1) double      % The physical region index each cell belongs to
+        delta_x (:,1) double              % The step size (dx) for every single cell
+        region_boundaries (:,1) double    % Cartesian coordinates of the region interfaces
     end
     
     methods
-        function obj = Mesh_1D_FDM(region_lengths, region_materials, nodes_per_region)
+        function obj = Mesh_1D_FDM(region_lengths, cells_per_region)
+            %METHOD1 Summary of this method goes here
+            %   Detailed explanation goes here
+
             % Store inputs as column vectors
             obj.region_lengths = region_lengths;
-            obj.region_materials = region_materials;
-            obj.nodes_per_region = nodes_per_region;
+            obj.cells_per_region = cells_per_region;
             
-            % Compute region boundaries and total nodes
+            % Compute region boundaries and total cells
             obj.region_boundaries = [0; cumsum(obj.region_lengths)];
-            obj.nNodes = sum(obj.nodes_per_region);
+            obj.nCells = sum(obj.cells_per_region);
             
             % Pre-allocate arrays
-            obj.nodes_vec = zeros(obj.nNodes, 1);
-            obj.node_region_idx = zeros(obj.nNodes, 1);
-            obj.node_material_idx = zeros(obj.nNodes, 1);
-            obj.delta_region = zeros(length(obj.region_lengths), 1);
+            obj.cell_centers = zeros(obj.nCells, 1);
+            obj.cell_region_idx = zeros(obj.nCells, 1);
+            obj.delta_x = zeros(obj.nCells, 1); 
             
-            % Populate the nodes
+            % Populate the cells
             ind = 1; 
             for i = 1:length(obj.region_lengths)
-                % Step size for a given region: length / (nodes + 1)
-                obj.delta_region(i) = obj.region_lengths(i) / obj.nodes_per_region(i);
+                % Step size for a given region
+                dx = obj.region_lengths(i) / obj.cells_per_region(i);
                 left_boundary = obj.region_boundaries(i);
                 
-                for j = 1:obj.nodes_per_region(i)
-                    % Place the node in the middle of the cell
-                    obj.nodes_vec(ind) = left_boundary + obj.delta_region(i) * (j - 0.5);
-                    obj.node_region_idx(ind) = i; 
-                    obj.node_material_idx(ind) = obj.region_materials(i); 
+                for j = 1:obj.cells_per_region(i)
+                    obj.delta_x(ind) = dx;
+                    % Place the calculation point in the middle of the cell
+                    obj.cell_centers(ind) = left_boundary + dx * (j - 0.5);
+                    obj.cell_region_idx(ind) = i; % Tag cell with its physical region
                     ind = ind + 1;
                 end
             end
         end
-
+        
         function displayMesh(obj)
+            %METHOD1 Summary of this method goes here
+            %   Detailed explanation goes here
             fprintf('==========================\n');
             fprintf('        MESH DATA         \n');
             fprintf('==========================\n\n');
             
-            fprintf('Total Reactor Length: %.2f cm\n', obj.region_boundaries(end));
-            fprintf('Total Number of Nodes: %d\n', obj.nNodes);
-            fprintf('Number of Regions:     %d\n\n', length(obj.region_lengths));
+            fprintf('Total Slab Length: %.2f cm\n', obj.region_boundaries(end));
+            fprintf('Total Cells:       %d\n', obj.nCells);
+            fprintf('Number of Regions: %d\n\n', length(obj.region_lengths));
             
             % Display Table of Regions
             fprintf('--- Region Breakdown ---\n');
             Region = (1:length(obj.region_lengths))';
-            Material_ID = obj.region_materials;
             Length = obj.region_lengths;
-            Nodes = obj.nodes_per_region;
-            Delta_x = obj.delta_region;
+            Cells = obj.cells_per_region;
             
-            T = table(Region, Material_ID, Length, Nodes, Delta_x);
+            T = table(Region, Length, Cells);
             disp(T);
-            
-            % Optional: Display first and last node coordinates to verify boundaries
-            if obj.nNodes > 0
-                fprintf('--- Nodal Extents ---\n');
-                fprintf('First node position: %.4f cm\n', obj.nodes_vec(1));
-                fprintf('Last node position:  %.4f cm\n', obj.nodes_vec(end));
-            end
-            fprintf('\n');
         end
     end
 end
+

@@ -1,5 +1,5 @@
-classdef Solver_1D_1EG
-    %Solver_1D_1EG Physical properties manager
+classdef Solver_1D_1EG_FDM
+    %Solver_1D_1EG_FDM 1D 1EG diffusion equation solver
     %   An implementation based on Hérbert's mesh-centered finite
     %   difference method
 
@@ -13,18 +13,18 @@ classdef Solver_1D_1EG
         Q (:,:) double                    % Fission Source Matrix
         phi (:,:) double                  % Flux profiles
         keff (:,1) double                 % Eigenvalues
-        plot_coordinates (:,1) double     % Coordinates for plotting (cells + boundaries)
+        full_mesh_coordinates (:,1) double     % Coordinates for plotting (cells + boundaries)
     end
     
     methods
-        function obj = Solver_1D_1EG(mesh, materials)            
+        function obj = Solver_1D_1EG_FDM(mesh, materials)            
             obj.mesh = mesh;
             obj.materials = materials;
             
             % Add the extreme boundary coordinates for plotting purposes
             left_boundary = obj.mesh.region_boundaries(1);
             right_boundary = obj.mesh.region_boundaries(end);
-            obj.plot_coordinates = [left_boundary; obj.mesh.cell_centers; right_boundary];
+            obj.full_mesh_coordinates = [left_boundary; obj.mesh.cell_centers; right_boundary];
         end
         
         function obj = assembleMatrices(obj)
@@ -111,7 +111,7 @@ classdef Solver_1D_1EG
             figure
             hold on
             grid on
-            plot(obj.plot_coordinates, obj.phi, 'LineWidth', 1.5);
+            plot(obj.full_mesh_coordinates, obj.phi, 'LineWidth', 1.5);
             xlabel('Position x (cm)');
             ylabel('Normalized Flux \Phi(x)');
             title('1D Reactor Flux Profile');

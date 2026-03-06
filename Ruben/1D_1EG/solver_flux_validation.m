@@ -85,17 +85,17 @@ disp(phi_exact);
 
 %% Solver validation
 region_materials = [1; 2; 2; 1];
-materials = Materials_1D_1eg_FDM(region_materials, D_lib, sigma_a_lib, nu_sigma_f_lib);
+materials = Materials(region_materials, D_lib, sigma_a_lib, nu_sigma_f_lib);
 
 region_lengths = [25; 150; 150; 25];
-nodes_per_region = [1; 1; 1; 1];
-mesh = Mesh_1D_FDM(region_lengths, region_materials, nodes_per_region);
+cells_per_region = [1; 1; 1; 1];
+mesh = Mesh_1D_FDM(region_lengths, cells_per_region);
 
-problem = Problem_1D_1eg_FDM(mesh, materials);
-problem = problem.assembleMatrices().solveEigenvalues(1);
+solver = Solver_1D_1EG_FDM(mesh, materials);
+solver = solver.assembleMatrices().solveEigenvalues(1);
 
-k_eff_num = problem.keff;
-phi_num = problem.phi(2:end-1);
+k_eff_num = solver.keff;
+phi_num = solver.phi(2:end-1);
 
 fprintf('Effective Multiplication Factor (k_eff) = %.5f\n', k_eff_num);
 disp('Normalized Neutron Flux array [phi_1, phi_2, phi_3, phi_4]:');

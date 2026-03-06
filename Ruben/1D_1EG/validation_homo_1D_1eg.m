@@ -29,15 +29,15 @@ for target_dof = DOF_array
 
     %% 2. SOLUTION A: MESH-CENTERED FDM (RUBEN)
     N_Ruben = target_dof; % cells
-    meshR = Mesh_1D_FDM(L, 1, N_Ruben);
-    matsR = Materials_1D_1eg_FDM(1, D_val, SigA_val, NuSigF_val);
-    probR = Problem_1D_1eg_FDM(meshR, matsR);
+    meshR = Mesh_1D_FDM(L, N_Ruben);
+    matsR = Materials(1, D_val, SigA_val, NuSigF_val);
+    probR = Solver_1D_1EG_FDM(meshR, matsR);
     probR = probR.assembleMatrices().solveEigenvalues(1);
     k_eff_R = probR.keff(1);
     size_R = size(probR.A,1);
     % Extract flux (including boundaries for the plot)
     phi_num_R = probR.phi(:, 1);
-    x_R = probR.nodes_vec_boundaries;
+    x_R = probR.full_mesh_coordinates;
     % Normalize the analytic flux (numeric flux is already normalized)
     phi_ana_R = phi_analytic_func(x_R);
     phi_ana_R = phi_ana_R / max(abs(phi_ana_R));

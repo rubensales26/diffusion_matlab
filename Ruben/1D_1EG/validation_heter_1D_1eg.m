@@ -72,12 +72,12 @@ for target_dof = DOF_array
     
     region_lengths = [b_refl; 2 * a_core; L - x_int2];
     region_materials = [1; 2; 1];
-    nodes_per_region = ceil(target_dof / 3) * ones(3,1);
+    cells_per_region = ceil(target_dof / 3) * ones(3,1);
     
-    meshR = Mesh_1D_FDM(region_lengths, region_materials, nodes_per_region);
+    meshR = Mesh_1D_FDM(region_lengths, cells_per_region);
     
-    matsR = Materials_1D_1eg_FDM(region_materials, D_array, SigA_array, NuSigF_array); 
-    probR = Problem_1D_1eg_FDM(meshR, matsR);
+    matsR = Materials(region_materials, D_array, SigA_array, NuSigF_array); 
+    probR = Solver_1D_1EG_FDM(meshR, matsR);
     probR = probR.assembleMatrices().solveEigenvalues(1);
     
     k_eff_R = probR.keff(1);
@@ -85,7 +85,7 @@ for target_dof = DOF_array
     
     % Extract flux
     phi_num_R = probR.phi(:, 1);
-    x_R = probR.nodes_vec_boundaries;
+    x_R = probR.full_mesh_coordinates;
     
     % Normalize analytic
     phi_ana_R = phi_analytic_func(x_R);
