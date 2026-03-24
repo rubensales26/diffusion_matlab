@@ -16,9 +16,13 @@ classdef Mesh_1D_FDM
     
     methods
         function obj = Mesh_1D_FDM(region_lengths, cells_per_region)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-
+            %Mesh_1D_FDM Constructor of the class
+            
+            % Check if the input leads to a valid mesh
+            if length(region_lengths) ~= length(cells_per_region)
+                error("Invalid input: Arguments region_lengths and cells_per_region must have the same dimensions.")
+            end
+            
             % Store inputs as column vectors
             obj.region_lengths = region_lengths;
             obj.cells_per_region = cells_per_region;
@@ -50,8 +54,8 @@ classdef Mesh_1D_FDM
         end
         
         function displayMesh(obj)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
+            %displayMesh Display on screen mesh information
+            
             fprintf('==========================\n');
             fprintf('        MESH DATA         \n');
             fprintf('==========================\n\n');

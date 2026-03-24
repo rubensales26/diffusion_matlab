@@ -1,6 +1,3 @@
-% This script provides an example on how to introduce data into the
-% classes.
-
 clearvars;
 close all;
 
@@ -21,7 +18,9 @@ mesh.displayMesh;
 materials = Materials(region_materials, D_lib, sigma_a_lib, nu_sigma_f_lib);
 materials.displayMaterials
 
-solver = Solver_1D_1EG_FDM(mesh, materials);
-solver = solver.assembleMatrices.solveEigenvalues(1);
-solver.displayProblem;
-solver.plotPhi;
+solver = Solver_1D_FDM(mesh, materials);
+solver = solver.assembleMatrices;
+disp(solver.A)
+disp()
+%solver.displayProblem;
+%solver.plotPhi;

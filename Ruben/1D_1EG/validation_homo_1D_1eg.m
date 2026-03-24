@@ -41,8 +41,6 @@ for target_dof = DOF_array
     % Normalize the analytic flux (numeric flux is already normalized)
     phi_ana_R = phi_analytic_func(x_R);
     phi_ana_R = phi_ana_R / max(abs(phi_ana_R));
-    length(phi_ana_R)
-    length(phi_num_R)
     % Calculate Absolute RMSE
     rmse_R = rmse(phi_ana_R, phi_num_R);
 

@@ -1,4 +1,4 @@
-classdef Solver_1D_1EG_FDM
+classdef Solver_1D_FDM
     %Solver_1D_1EG_FDM 1D 1EG diffusion equation solver
     %   An implementation based on Hérbert's mesh-centered finite
     %   difference method
@@ -7,17 +7,19 @@ classdef Solver_1D_1EG_FDM
         % Input attributes
         mesh
         materials
+        xi_matrix % g x n matrix, n = number of material regions
         
         % Computed attributes
+        n_energy_groups
         A (:,:) double                    % Removal/Transport Matrix
-        Q (:,:) double                    % Fission Source Matrix
+        B (:,:) double                    % Fission Source Matrix
         phi (:,:) double                  % Flux profiles
         keff (:,1) double                 % Eigenvalues
         full_mesh_coordinates (:,1) double     % Coordinates for plotting (cells + boundaries)
     end
     
     methods
-        function obj = Solver_1D_1EG_FDM(mesh, materials)
+        function obj = Solver_1D_1EG_FDM(mesh, materials,xi_matrix)
             %Solver_1D_1EG_FDM Constructor of the class
             
             % Check if the input leads to a valid problem
@@ -27,6 +29,10 @@ classdef Solver_1D_1EG_FDM
 
             obj.mesh = mesh;
             obj.materials = materials;
+
+            g = dims(xi_matrix);
+            obj.n_energy_groups = g(1);
+
             
             % Add the extreme boundary coordinates for plotting purposes
             left_boundary = obj.mesh.region_boundaries(1);
@@ -47,43 +53,53 @@ classdef Solver_1D_1EG_FDM
             
             % Ask the Materials class which Material ID corresponds to each region
             mat_id_vec = obj.materials.region_materials(geom_reg_idx);
-            
+                        
             % Map physical properties to every cell
             D_vec = obj.materials.D_lib(mat_id_vec);
             SigA_vec = obj.materials.sigma_a_lib(mat_id_vec);
             NuSigF_vec = obj.materials.nu_sigma_f_lib(mat_id_vec);
             Delta_vec = obj.mesh.delta_x;
             
-            % 2. Calculate Coupling Coefficients (d)
-            D_curr = D_vec(1:end-1);
-            D_next = D_vec(2:end);   
-            dx_curr = Delta_vec(1:end-1);
-            dx_next = Delta_vec(2:end);
+            % FULL MATRIX BABY
+            nCells = obj.mesh.nCells;
+            A = zeros(obj.n_energy_groups*nCells);
+            B = zeros(obj.n_energy_groups*nCells);
             
-            d_vec = (2 .* D_curr .* D_next) ./ (dx_next .* D_curr + dx_curr .* D_next);
-            
-            % 3. Calculate Boundary Leakage Coefficients (L)
-            % Cell-Centered Zero Flux at the outer edges
-            L_left  = (2 * D_vec(1)) / Delta_vec(1);
-            L_right = (2 * D_vec(end)) / Delta_vec(end);
-            
-            % 4. Build Matrix A (Loss/Transport)
-            diag_A = Delta_vec .* SigA_vec;
-            diag_A = diag_A + [d_vec; 0] + [0; d_vec];
-            
-            % Add external leakage to the boundary cells
-            diag_A(1)   = diag_A(1) + L_left;
-            diag_A(end) = diag_A(end) + L_right;
-            
-            % Off-diagonals (Coupling) must be strictly NEGATIVE
-            padded_upper = [0; -d_vec];
-            padded_lower = [-d_vec; 0];
-            obj.A = spdiags([padded_lower, diag_A, padded_upper], -1:1, nCells, nCells);
-            
-            % 5. Build Matrix Q (Fission/Production)
-            % Fission production must be POSITIVE
-            diag_Q = Delta_vec .* NuSigF_vec;
-            obj.Q = spdiags(diag_Q, 0, nCells, nCells);
+            for i=1:obj.n_energy_groups
+                % 2. Calculate Coupling Coefficients (d)
+                D_curr = D_vec(1:end-1);
+                D_next = D_vec(2:end);   
+                dx_curr = Delta_vec(1:end-1);
+                dx_next = Delta_vec(2:end);
+                
+                d_vec = (2 .* D_curr .* D_next) ./ (dx_next .* D_curr + dx_curr .* D_next);
+                
+                % 3. Calculate Boundary Leakage Coefficients (L)
+                % Cell-Centered Zero Flux at the outer edges
+                L_left  = (2 * D_vec(1)) / Delta_vec(1);
+                L_right = (2 * D_vec(end)) / Delta_vec(end);
+                
+                % 4. Build Matrix A (Loss/Transport)
+                diag_A = Delta_vec .* SigA_vec;
+                diag_A = diag_A + [d_vec; 0] + [0; d_vec];
+                
+                % Add external leakage to the boundary cells
+                diag_A(1)   = diag_A(1) + L_left;
+                diag_A(end) = diag_A(end) + L_right;
+                
+                % Off-diagonals (Coupling) must be strictly NEGATIVE
+                padded_upper = [0; -d_vec];
+                padded_lower = [-d_vec; 0];
+
+                starting_coordinate = (i-1)* nCells + 1;
+                A(starting_coordinate:nCells,starting_coordinate:nCells) = spdiags([padded_lower, diag_A, padded_upper], -1:1, nCells, nCells);
+                
+                diag_Q = Delta_vec .* NuSigF_vec;
+                B(starting_coordinate:nCells,starting_coordinate:nCells) = spdiags(diag_Q, 0, nCells, nCells);
+
+            end
+            obj.A = A;
+            obj.B = B;
         end
         
         function obj = solveEigenvalues(obj, nm)

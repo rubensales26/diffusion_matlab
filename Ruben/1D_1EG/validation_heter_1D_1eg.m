@@ -61,6 +61,7 @@ fprintf('Initial guess (Bare k_eff) : %.5f\n', k_bare);
 fprintf('Analytic K-eff: %.10f\n\n', k_analytic);
 
 rmse_R_vec = zeros(length(DOF_array),1);
+rmse_F_vec = zeros(length(DOF_array),1);
 i = 1;
 
 %% START LOOP OVER MESH SIZES
@@ -93,7 +94,6 @@ for target_dof = DOF_array
     
     rmse_R = rmse(phi_ana_R, phi_num_R);
     rmse_R_vec(i) = rmse_R;
-    i = i + 1;
     
     %% 4. SOLUTION B: POINT-CENTERED FDM (JAIME)
     N_J_FDM = target_dof; % points
@@ -154,6 +154,7 @@ for target_dof = DOF_array
     phi_ana_F = phi_ana_F / max(abs(phi_ana_F));
     
     rmse_F = rmse(phi_ana_F, phi_num_F);
+    rmse_F_vec(i) = rmse_F;
     
     %% 6. PRINT RESULTS
     err_pcm_R = abs(k_analytic - k_eff_R) * 1e5;
@@ -191,23 +192,23 @@ for target_dof = DOF_array
     ylabel('Normalized Flux \phi(x)');
     title(sprintf('Flux Shape Comparison (1G Heterogeneous, DOF=%d)', target_dof));
     legend('Location', 'best');
+
+    i = i + 1;
 end
 
 figure('Color', 'w', 'Name', 'Convergence Study');
-loglog(DOF_array, rmse_R_vec, '-ok', 'LineWidth', 2, 'MarkerFaceColor', 'b');
+loglog(DOF_array, rmse_R_vec, '-ok', 'LineWidth', 2, 'MarkerFaceColor', 'b', 'DisplayName', 'Ruben FDM');
 grid on; hold on;
+loglog(DOF_array, rmse_F_vec, '-sr', 'LineWidth', 2, 'MarkerFaceColor', 'r', 'DisplayName', 'Jaime FEM (Deg 4)'); % NEW: FEM Plot
 
 % Add labels and title
 xlabel('Number of Nodes (DOF)');
 ylabel('Flux RMSE (Absolute)');
-title('Convergence of Mesh-Centered FDM (Ruben)');
+title('Convergence Comparison: FDM vs FEM');
 
-% Optional: Add a reference line for 2nd order convergence (O(h^2))
-% Since error is proportional to (1/N)^2, it should have a slope of -2
 ref_line = (rmse_R_vec(1)) * (DOF_array(1)./DOF_array).^2;
-loglog(DOF_array, ref_line, '--r', 'DisplayName', 'Theoretical O(h^2)');
-
-legend('Ruben FDM RMSE', '2nd Order Slope Reference');
+loglog(DOF_array, ref_line, '--k', 'DisplayName', 'Theoretical O(h^2)');
+legend('Location', 'southwest');
 
 % =========================================================================
 % LOCAL FUNCTIONS FOR ANALYTICAL SOLUTION

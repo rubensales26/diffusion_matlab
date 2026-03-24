@@ -7,6 +7,7 @@ classdef Materials
         D_lib (:,1) double              % Library of Diffusion coefficients 
         sigma_a_lib (:,1) double        % Library of Absorption cross-sections
         nu_sigma_f_lib (:,1) double     % Library of Fission cross-sections
+        %chi_lib (:,1) double
     end
     
     methods
