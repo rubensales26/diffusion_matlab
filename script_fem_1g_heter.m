@@ -38,5 +38,6 @@ problema = problema.resolver_autovalor(3); % Calcular 3 primeros modos
 % Resultados
 problema.graficar([1,2,3]);
 save(output_file)
+fprintf("GRADO DE FEM: %d", malla.grado_l)
 disp(problema.keff)
 load('FEM_1G_HET_N14.mat')

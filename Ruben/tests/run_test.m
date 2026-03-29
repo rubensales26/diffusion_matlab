@@ -1,5 +1,6 @@
 function run_test()
     addpath("../")
+    
     fprintf("Testing test_4nodes... ")
     test_4nodes();
     fprintf("OK\n")

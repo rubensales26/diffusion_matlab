@@ -2,16 +2,18 @@ function test_het_1EG()
     load("het_1EG_exact_results.mat","size_vec","k_analytic","k_eff_num_vec");
 
     % PROBLEM PARAMETERS (1G Heterogeneous)
-    L = 350;
+    L = 350;    
     x_int1 = 25;   % Coordinate of Interface 1 (Reflector -> Core)
     x_int2 = 325;  % Coordinate of Interface 2 (Core -> Reflector)
     
     % Physical properties
     % Index 1 = Reflector, Index 2 = Homogeneous Fuel
-    D_array       = [1.446, 0.776];
-    SigA_array    = [0.0077, 0.0244];
-    NuSigF_array  = [0.0000, 0.0260];
-    
+    D_lib          = [1.446; 0.776];
+    sigma_a_lib    = [0.0077; 0.0244];
+    nu_sigma_f_lib = [0; 0.0260];
+    chi_lib        = [1; 1];
+    sigma_s_lib = zeros(2, 1, 1);
+
     for i = 1:length(size_vec)  
         N = size_vec(i);
         
@@ -21,12 +23,12 @@ function test_het_1EG()
         
         mesh = Mesh_1D_FDM(region_lengths, cells_per_region);
         
-        materials = Materials(region_materials, D_array, SigA_array, NuSigF_array); 
-        solver = Solver_1D_1EG_FDM(mesh, materials);
+        materials = Materials(region_materials, D_lib, sigma_a_lib, nu_sigma_f_lib, chi_lib, sigma_s_lib);
+        solver = Solver_1D_FDM(mesh, materials);
         solver = solver.assembleMatrices().solveEigenvalues(1);
         
         % Extract the computed k_eff
-        k_eff_num = solver.keff;
+        k_eff_num = solver.keff(1);
 
         % Solver validation
         assert(abs(k_analytic - k_eff_num) < 1e-4); % Pretty bad comparison not to trigger errors            

@@ -17,7 +17,7 @@ classdef Malla
             s.N = N;
             s.grado_l = grado_l;
 
-            s.nodos = zeros(N , grado_l+1);
+            s.nodos = zeros(N, grado_l+1);
             for e = 1:N
                 s.nodos(e,:) = (e-1)*grado_l + (1:grado_l+1);
             end
